@@ -87,7 +87,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("solution")
     ap.add_argument("input")
-    ap.add_argument("--out", default="mp_out")
+    ap.add_argument("--out", default="outputs/mp_out")
     ap.add_argument("--stride", type=int, default=1, help="traiter 1 image sur N (vidéo)")
     ap.add_argument("--max-frames", type=int, default=300)
     a = ap.parse_args()

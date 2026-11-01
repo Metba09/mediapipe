@@ -34,21 +34,22 @@ Si le skill est installé ailleurs, adapter le chemin (`/mnt/skills/...`). Les e
 
 Voie legacy (image ou vidéo ; `--stride N` pour sous-échantillonner, `--max-frames` borne les vidéos) :
 ```bash
-/tmp/mp-legacy/bin/python scripts/legacy_landmarks.py hands photo.jpg --out sortie
-/tmp/mp-legacy/bin/python scripts/legacy_landmarks.py pose video.mp4 --out sortie --stride 2
+/tmp/mp-legacy/bin/python scripts/legacy_landmarks.py hands photo.jpg --out outputs/AAAA-MM-JJ-sujet
+/tmp/mp-legacy/bin/python scripts/legacy_landmarks.py pose video.mp4 --out outputs/AAAA-MM-JJ-sujet --stride 2
 ```
 Solutions : `hands | pose | face_mesh | face_detection | holistic | selfie_segmentation`.
 Sorties : `annotated.png|mp4`, `landmarks.json` (coordonnées normalisées 0-1 ; `pose_world` en mètres), et `mask.png` pour la segmentation.
 
 Voie tasks :
 ```bash
-/tmp/mp-tasks/bin/python scripts/tasks_run.py object --model efficientdet.tflite --image photo.jpg --out sortie
+/tmp/mp-tasks/bin/python scripts/tasks_run.py object --model efficientdet.tflite --image photo.jpg --out outputs/AAAA-MM-JJ-sujet
 ```
 Tâches : `pose | hands | face | face_detect | gesture | object | classify | segment`.
 
 ## Règles de travail
 
-- Livrer le fichier annoté (image/mp4) avec `SendUserFile` et résumer les résultats en une ou deux phrases (nombre de mains/personnes, scores).
+- **Dépôt des fichiers générés (règle de l'utilisateur)** : tout fichier produit va dans le fork `Metba09/mediapipe` (dossier `outputs/<date>-<sujet>/`, branche `claude-skill`) ou, hors sujet MediaPipe, dans `Metba09/claude-memory`. Commiter et pousser avant la fin de la session (le sandbox est éphémère). Ne pas y mettre d'images de personnes sans l'accord de l'utilisateur ; vérifier qu'aucun secret n'y figure.
+- Livrer aussi le fichier annoté (image/mp4) avec `SendUserFile` et résumer les résultats en une ou deux phrases (nombre de mains/personnes, scores).
 - Un résultat vide (`None`, 0 détection) est normal si le sujet est absent, trop petit ou flou : le signaler plutôt que d'insister ; proposer une autre image.
 - Les landmarks sont normalisés : multiplier x par la largeur et y par la hauteur pour obtenir des pixels.
 - Vidéo : traiter les images dans l'ordre (le suivi temporel dépend de la séquence) et borner la durée (`--max-frames`).
