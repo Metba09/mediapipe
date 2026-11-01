@@ -37,7 +37,7 @@ def main():
     ap.add_argument("task", choices=TASKS)
     ap.add_argument("--model", required=True)
     ap.add_argument("--image", required=True)
-    ap.add_argument("--out", default="outputs/mp_out")
+    ap.add_argument("--out", default="/tmp/mp-out")
     ap.add_argument("--max-results", type=int, default=5)
     ap.add_argument("--threshold", type=float, default=None)
     a = ap.parse_args()

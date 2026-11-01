@@ -28,4 +28,4 @@ Variables : voir `.env.example` (aucun secret requis).
 - `.claude/skills/mediapipe-sandbox/references/legacy-solutions.md`, `tasks-api.md`, `repo-map.md`.
 - Il n'y a aucune commande ni agent `.claude/commands` ou `.claude/agents` à charger.
 
-**Livrables** : les fichiers générés sont déposés dans ce fork (`outputs/AAAA-MM-JJ-sujet/`, branche `claude-skill`) ou dans `Metba09/claude-memory`, commités et poussés avant la fin de la session.
+**Livrables** : les fichiers générés sont déposés dans `Metba09/claude-memory` (dossier `livrables/mediapipe/AAAA-MM-JJ-sujet/`), commités et poussés avant la fin de la session. Ce fork ne contient que le code et le skill ; les scripts écrivent par défaut dans `/tmp/mp-out`.
