@@ -28,7 +28,7 @@ Le dépôt `Metba09/mediapipe` est un fork du code source MediaPipe (C++/Bazel, 
 bash .claude/skills/mediapipe-sandbox/scripts/setup_env.sh legacy   # ~1 min, crée /tmp/mp-legacy (Python 3.12)
 bash .claude/skills/mediapipe-sandbox/scripts/setup_env.sh tasks    # crée /tmp/mp-tasks (dernier mediapipe)
 ```
-Si le skill est installé ailleurs, adapter le chemin (`/mnt/skills/...`). Les environnements sont perdus à la fin de la session : relancer le script.
+Depuis la racine du fork, `make setup` fait la même chose ; `make test` lance le test de fumée et `make check` (syntaxe, secrets, test) se lance avant de conclure. Le script est idempotent et sans saisie. Si le skill est installé ailleurs, adapter le chemin (`/mnt/skills/...`). Les environnements sont perdus à la fin de la session : relancer le script.
 
 ## Utilisation
 
