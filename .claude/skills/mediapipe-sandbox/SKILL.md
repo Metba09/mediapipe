@@ -32,6 +32,12 @@ Depuis la racine du fork, `make setup` fait la même chose ; `make test` lance l
 
 ## Utilisation
 
+Suivi de mouvement d'une vidéo (motion design, plans caméra : aucun modèle, aucun réseau) :
+```bash
+make track VIDEO=video.mp4            # ou : /tmp/mp-legacy/bin/python scripts/track_motion.py video.mp4 --out /tmp/mp-out/track
+```
+Sorties : `tracks.json` (plans, mouvement dominant par image : dx, dy, échelle, rotation, cumul par plan ; pistes de points), `motion_curve.csv`, `shots.csv`, `annotated.mp4` (traînées), `motion_timeline.png`. Les points immobiles (filigrane, fond fixe) sont marqués `static`. Les coupes sont détectées par histogramme **et** par perte brutale de pistes (transitions sur fond blanc) ; régler `--cut-threshold` et `--lost-cut` si un plan est manqué ou coupé à tort. Pour une vidéo de motion design (affiches, typographies), c'est cette voie qui s'applique, pas la pose ni les mains. L'énergie est moyennée sur tout l'écran : un petit élément qui bouge pèse peu.
+
 Voie legacy (image ou vidéo ; `--stride N` pour sous-échantillonner, `--max-frames` borne les vidéos) :
 ```bash
 /tmp/mp-legacy/bin/python scripts/legacy_landmarks.py hands photo.jpg --out /tmp/mp-out/sujet

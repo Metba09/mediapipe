@@ -30,4 +30,11 @@ vout = os.path.join(tmp, "video")
 run(os.path.join(SCRIPTS, "legacy_landmarks.py"), "pose", vid, "--out", vout, "--stride", "2")
 frames = json.load(open(os.path.join(vout, "landmarks.json")))
 assert len(frames) == 6, f"attendu 6 images, obtenu {len(frames)}"
-print("ok vidéo (6 images)\nTOUS LES TESTS PASSENT")
+print("ok vidéo (6 images)")
+tout = os.path.join(tmp, "track")
+run(os.path.join(SCRIPTS, "track_motion.py"), vid, "--out", tout)
+d = json.load(open(os.path.join(tout, "tracks.json")))
+assert d["video"]["n_frames"] == 12 and len(d["frames"]) == 12 and d["shots"][0]["start"] == 0
+for f in ("annotated.mp4", "motion_curve.csv", "shots.csv", "motion_timeline.png"):
+    assert os.path.isfile(os.path.join(tout, f)), f"suivi: {f} manquant"
+print("ok suivi de mouvement\nTOUS LES TESTS PASSENT")
