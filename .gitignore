@@ -8,3 +8,4 @@ node_modules/
 
 # Sandbox Claude.ai
 .env
+__pycache__/
