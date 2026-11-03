@@ -4,7 +4,7 @@ SK := .claude/skills/mediapipe-sandbox
 MP_VENV_BASE ?= /tmp/mp
 export MP_VENV_BASE
 
-.PHONY: setup setup-tasks setup-ocr sample test check track text clean help
+.PHONY: gsap setup setup-tasks setup-ocr sample test check track text clean help
 help:
 	@echo "make setup        installe l'environnement hors-ligne (idempotent)"
 	@echo "make setup-tasks  installe aussi l'API Tasks (modèles fournis par l'utilisateur)"
@@ -25,6 +25,10 @@ setup-ocr:
 text: setup-ocr
 	@test -n "$(VIDEO)" || { echo "usage : make text VIDEO=fichier.mp4 [SHOTS=tracks.json] [REVIEW=revue.json] [OUT=dossier]"; exit 2; }
 	$(MP_VENV_BASE)-ocr/bin/python $(SK)/scripts/text_track.py "$(VIDEO)" --out $(or $(OUT),/tmp/mp-out/text) $(if $(SHOTS),--shots $(SHOTS)) $(if $(REVIEW),--review $(REVIEW))
+gsap:
+	@test -n "$(CORPUS)" && test -n "$(TRACKING)" || { echo "usage : make gsap CORPUS=texte.md TRACKING=text_tracking.json [OUT=page.html]  (npm i gsap @fontsource/arimo @fontsource/playfair-display @fontsource/tinos dans /tmp/mp-work/gsap-assets)"; exit 2; }
+	python3 $(SK)/scripts/extract_motion_presets.py "$(TRACKING)" --out /tmp/mp-out/gsap/motion_presets.json
+	python3 $(SK)/scripts/build_gsap_corpus.py "$(CORPUS)" --presets /tmp/mp-out/gsap/motion_presets.json --out $(or $(OUT),/tmp/mp-out/gsap/page.html)
 track: setup
 	@test -n "$(VIDEO)" || { echo "usage : make track VIDEO=fichier.mp4 [OUT=dossier]"; exit 2; }
 	$(MP_VENV_BASE)-legacy/bin/python $(SK)/scripts/track_motion.py "$(VIDEO)" --out $(or $(OUT),/tmp/mp-out/track)

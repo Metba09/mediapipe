@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>__TITLE__</title>
+<style>
+__FONTS__
+:root{--white:#fff;--black:#000;--red:#85000a;--dark:#010101;--beige:#e3c8aa;--ui:#1b1b1b}
+@media (prefers-color-scheme:dark){:root{--ui:#111}}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--ui);color:#eee;font-family:Arimo,Arial,sans-serif;overflow:hidden}
+#wrap{position:fixed;inset:0 0 56px 0;display:flex;align-items:center;justify-content:center}
+#stage{position:relative;width:1080px;height:1920px;flex:none;transform-origin:center center;background:#fff;overflow:hidden}
+.beat{position:absolute;inset:0;visibility:hidden}
+.bg{position:absolute;inset:0;background:var(--white)}
+.beat.dark .bg{background:var(--dark)}
+.col{position:absolute;left:90px;width:900px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;gap:26px}
+.ln{will-change:transform,opacity}
+.in{display:block}
+.before,.after{font:500 83px/1.1 Arimo,sans-serif;color:var(--black);overflow-wrap:break-word}
+.after{font:400 83px/1.12 Tinos,serif}
+.emph{font:italic 400 210px/1.02 Playfair,serif;color:var(--red);white-space:nowrap;letter-spacing:-.01em}
+.emph.sansB{font:400 228px/1 Arimo,sans-serif;letter-spacing:-.03em}
+.body{font:500 98px/1.1 Arimo,sans-serif;color:var(--black);overflow-wrap:break-word}
+.beat.dark .body{color:var(--beige)}
+.beat.dark .col{gap:0}
+.drop .body,.drop .emph{font:500 124px/1.04 Arimo,sans-serif;color:var(--black);font-style:normal;white-space:normal;letter-spacing:-.02em}
+.cover .emph{font:400 280px/.95 Playfair,serif;font-style:normal;color:var(--black);white-space:normal;letter-spacing:-.02em}
+.rule{position:absolute;left:90px;width:120px;height:8px;background:var(--red)}
+#sec{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:680px}#cnt{white-space:nowrap}#chrome{position:absolute;left:90px;right:90px;top:92px;display:flex;justify-content:space-between;font:500 34px/1 Arimo,sans-serif;color:#000;letter-spacing:.04em;text-transform:uppercase;pointer-events:none;z-index:5}
+#foot{position:absolute;left:90px;right:90px;bottom:90px;z-index:5;pointer-events:none}
+#bar{height:6px;background:rgba(0,0,0,.15);position:relative}
+#bar i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--red)}
+#stage.darkc #chrome{color:#e3c8aa}#stage.darkc #bar{background:rgba(227,200,170,.25)}
+#ui{position:fixed;left:0;right:0;bottom:0;height:56px;display:flex;align-items:center;gap:14px;padding:0 16px;background:#000;font:500 14px Arimo,sans-serif;color:#ddd}
+#ui button{all:unset;cursor:pointer;width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:#222}
+#ui button:focus-visible{outline:2px solid #e3c8aa}
+#seek{flex:1;accent-color:#c1121f}
+#sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style></head>
+<body>
+<div id="wrap"><div id="stage" aria-label="Animation typographique"><div id="chrome"><span id="sec"></span><span id="cnt"></span></div><div id="foot"><div id="bar"><i></i></div></div></div></div>
+<div id="ui"><button id="pp" aria-label="Lecture / pause">▶</button><input id="seek" type="range" min="0" max="1000" value="0" aria-label="Position"><span id="tm">0:00</span></div>
+<div id="sr"></div>
+<script>__GSAP__</script>
+<script>
+const DATA=__DATA__;
+(async function(){
+const P=DATA.presets,S=1080/P.canvas_src.w,W=1080,H=1920,FPS=P.fps;
+const stage=document.getElementById('stage');
+const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+function fit(){const vw=innerWidth,vh=innerHeight-56,k=Math.min(vw/W,vh/H);stage.style.transform='scale('+k+')';stage.style.marginLeft=stage.style.marginRight=((W*k-W)/2)+'px';stage.style.marginTop=stage.style.marginBottom=((H*k-H)/2)+'px'}
+addEventListener('resize',fit);fit();
+await Promise.all(['400 40px Arimo','500 40px Arimo','700 40px Arimo','400 40px Playfair','italic 400 40px Playfair','400 40px Tinos'].map(f=>document.fonts.load(f)));
+const el=(c,p)=>{const e=document.createElement('div');e.className=c;(p||stage).appendChild(e);return e};
+const noise=(f,k)=>{let x=(f*374761393+k*668265263)^0x5bd1e995;x=Math.imul(x^x>>>13,1274126177);return((x^x>>>16)>>>0)/4294967295};
+const HE=P.hero_entrance,L=HE.lines,fall=P.exit_fall,fadeIn=P.fade_in_s;
+const tl=gsap.timeline({paused:true,defaults:{overwrite:false}});
+const flick=[];// {inner, t0,t1, sigma, id}
+const chrome=document.getElementById('chrome'),sec=document.getElementById('sec'),cnt=document.getElementById('cnt');
+let all=[];
+DATA.beats.forEach((b,bi)=>{
+  const dark=b.tpl==='zoom',cover=b.tpl==='cover',drop=b.tpl==='drop';
+  const B=el('beat '+b.tpl+(dark?' dark':''));B.style.zIndex=1;el('bg',B);
+  const col=el('col',B);
+  if(cover){const r=el('rule',B);r.style.top='640px'}
+  const lines=[];
+  b.lines.forEach((ln,li)=>{
+    const kind=ln[0],text=ln[1];
+    const w=el('ln',col),inn=el('in '+(kind==='body'?'body':kind),w);inn.textContent=text;
+    if(kind==='emph'&&b.tpl==='hero'&&bi%2===1)inn.classList.add('sansB');
+    lines.push({w,inn,kind,text,li});
+  });
+  all.push({B,b,lines,dark});
+});
+// ajustement à la largeur / hauteur (après polices)
+all.forEach(({B,b,lines})=>{
+  B.style.visibility='hidden';B.style.display='block';B.style.visibility='hidden';
+  lines.forEach(l=>{
+    const cs=getComputedStyle(l.inn);let fs=parseFloat(cs.fontSize),n=0;
+    if(l.kind==='emph'&&b.tpl==='hero'){l.inn.style.display='inline-block';while(l.inn.scrollWidth>900&&n++<60){fs*=.95;l.inn.style.fontSize=fs+'px'}l.inn.style.display='block'}
+    else{while((l.inn.scrollHeight>(b.tpl==='cover'?900:1000)||longestWord(l.inn)>900)&&n++<60){fs*=.95;l.inn.style.fontSize=fs+'px'}}
+  });
+});
+function longestWord(n){let m=0;const sp=document.createElement('span');sp.style.cssText='position:absolute;white-space:nowrap;visibility:hidden;font:'+getComputedStyle(n).font+';letter-spacing:'+getComputedStyle(n).letterSpacing;stage.appendChild(sp);n.textContent.split(' ').forEach(w=>{sp.textContent=w;m=Math.max(m,sp.offsetWidth)});sp.remove();return m}
+const tot=DATA.beats.length;
+all.forEach(({B,b,lines,dark},bi)=>{
+  const t0=b.t0,t1=b.t0+b.dur;
+  tl.set(B,{visibility:'visible'},t0);
+  tl.set(stage,{className:dark?'darkc':''},t0);
+  tl.call(()=>{sec.textContent=b.section||'';cnt.textContent=String(bi+1).padStart(2,'0')+' / '+String(tot).padStart(2,'0')},null,t0);
+  lines.forEach((l,i)=>{
+    const g=l.w;let from={},to={},ease='none',dur=.5,delay=0;
+    if(b.tpl==='hero'){const role=l.kind==='emph'?(l.inn.classList.contains('sansB')?'sansB':'didoneI'):(l.kind==='before'?'sans':(i%2?'serif':'sansS'));const r=L[role];
+      from={x:r.from_x_frac*W,opacity:r.start_opacity};ease=r.ease;dur=r.duration;delay=i*HE.stagger_s*2}
+    else if(b.tpl==='rise'){const r=P.rise;from={y:r.from_y_frac*H,opacity:0};ease=r.ease;dur=r.duration}
+    else if(b.tpl==='slide'){const r=P.slide;from={x:-r.from_x_frac*W,opacity:0};ease=r.ease;dur=r.duration}
+    else if(b.tpl==='zoom'){const r=P.zoom;from={scale:r.scale_from,y:-r.dy_frac*H,opacity:0,transformOrigin:'0% 50%'};ease=r.scale.ease;dur=r.scale.duration}
+    else if(b.tpl==='drop'){const r=P.drop;from={y:-r.dy_frac*H,opacity:0};ease=r.ease;dur=r.duration}
+    else{const r=P.cover_logo;from={x:r.snap_in.from_x_frac*W,y:-r.settle.dy_frac*H,opacity:0};ease=r.settle.ease;dur=r.settle.duration}
+    const fd=Math.min(dur,Math.max(fadeIn,.07));
+    tl.fromTo(g,{x:0,y:0,scale:1,opacity:0,...from},{x:0,y:0,scale:1,ease,duration:dur,immediateRender:true},t0+delay);
+    tl.to(g,{opacity:1,duration:fd,ease:'none'},t0+delay);
+    if(b.tpl==='hero'){const fr=Math.max(t0+dur_of(b)-fall.duration,t0+delay+dur*.9);
+      tl.to(g,{x:fall.dx_frac*W,y:fall.dy_frac*H,ease:fall.ease,duration:fall.duration},fr)}
+    flick.push({el:l.inn,t0:t0,t1:t1,sigma:(b.tpl==='drop'||b.tpl==='cover'?P.flicker.glitch_sigma:P.flicker.hero_sigma)*(b.tpl==='cover'?0:1),k:bi*8+i});
+  });
+  tl.set(B,{visibility:'hidden'},t1);
+});
+function dur_of(b){return b.dur}
+// la dernière coupe laisse l'écran de fin
+const END=DATA.beats[tot-1],TOTAL=END.t0+END.dur;
+tl.set({},{},TOTAL);
+const bar=document.querySelector('#bar i'),seekEl=document.getElementById('seek'),tm=document.getElementById('tm'),pp=document.getElementById('pp');
+function applyFlicker(t){const f=Math.floor(t*FPS);flick.forEach(x=>{if(t>=x.t0&&t<x.t1&&x.sigma>0){x.el.style.opacity=(1-x.sigma*noise(f,x.k)).toFixed(3)}else x.el.style.opacity=''})}
+function ui(t){bar.style.width=(100*t/TOTAL)+'%';seekEl.value=Math.round(1000*t/TOTAL);tm.textContent=fmt(t)+' / '+fmt(TOTAL)}
+tl.eventCallback('onUpdate',()=>{const t=tl.time();applyFlicker(t);ui(t)});
+tl.eventCallback('onComplete',()=>{pp.textContent='↻'});
+window.seek=function(t){tl.pause();tl.time(Math.max(0,Math.min(TOTAL-1e-3,t)),false);applyFlicker(tl.time());ui(tl.time());return tl.time()};
+window.timeline=tl;window.DURATION=TOTAL;window.FPS=FPS;
+pp.onclick=()=>{if(tl.paused()||tl.progress()===1){if(tl.progress()===1)tl.restart();else tl.play();pp.textContent='❚❚'}else{tl.pause();pp.textContent='▶'}};
+seekEl.oninput=()=>{window.seek(seekEl.value/1000*TOTAL)};
+addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();pp.onclick()}else if(e.code==='ArrowRight')seek(tl.time()+2);else if(e.code==='ArrowLeft')seek(tl.time()-2)});
+document.getElementById('sr').textContent=DATA.beats.map(b=>b.lines.map(l=>l[1]).join(' ')).join(' ');
+window.seek(0);tl.play();pp.textContent='❚❚';
+window.__ready=true;
+})();
+</script></body></html>

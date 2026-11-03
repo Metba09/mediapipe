@@ -14,6 +14,7 @@ make setup     # environnement hors-ligne : /tmp/mp-legacy (Python 3.12 + mediap
 make test      # test de fumée des 6 solutions sur données synthétiques locales
 make track VIDEO=f.mp4   # suivi de mouvement d'une vidéo -> /tmp/mp-out/track
 make text VIDEO=f.mp4    # textes animés -> JSON (expressions, trajectoires, styles) ; exige make setup-ocr
+make gsap CORPUS=t.md TRACKING=text_tracking.json   # anime un texte avec le motion design mesuré -> HTML GSAP autonome (/tmp/mp-out/gsap)
 make check     # syntaxe + frontmatter + secrets + test : à lancer avant de conclure
 make setup-tasks   # optionnel : API Tasks récente (exige un modèle .task/.tflite fourni par l'utilisateur)
 ```
