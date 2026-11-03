@@ -4,12 +4,14 @@ SK := .claude/skills/mediapipe-sandbox
 MP_VENV_BASE ?= /tmp/mp
 export MP_VENV_BASE
 
-.PHONY: setup setup-tasks sample test check track clean help
+.PHONY: setup setup-tasks setup-ocr sample test check track text clean help
 help:
 	@echo "make setup        installe l'environnement hors-ligne (idempotent)"
 	@echo "make setup-tasks  installe aussi l'API Tasks (modèles fournis par l'utilisateur)"
 	@echo "make sample       génère des données d'exemple dans /tmp/mp-sample"
 	@echo "make track VIDEO=f.mp4  suivi de mouvement -> /tmp/mp-out/track (OUT=dossier pour changer)"
+	@echo "make setup-ocr    installe l'OCR hors-ligne (/tmp/mp-ocr)"
+	@echo "make text VIDEO=f.mp4 [SHOTS=tracks.json] [REVIEW=revue.json]  textes, trajectoires, styles -> /tmp/mp-out/text"
 	@echo "make test         test de fumée des solutions embarquées"
 	@echo "make check        syntaxe + frontmatter + secrets + test (à lancer avant de conclure)"
 setup:
@@ -18,6 +20,11 @@ setup-tasks:
 	bash $(SK)/scripts/setup_env.sh tasks
 sample:
 	python3 $(SK)/scripts/make_sample_data.py /tmp/mp-sample
+setup-ocr:
+	bash $(SK)/scripts/setup_env.sh ocr
+text: setup-ocr
+	@test -n "$(VIDEO)" || { echo "usage : make text VIDEO=fichier.mp4 [SHOTS=tracks.json] [REVIEW=revue.json] [OUT=dossier]"; exit 2; }
+	$(MP_VENV_BASE)-ocr/bin/python $(SK)/scripts/text_track.py "$(VIDEO)" --out $(or $(OUT),/tmp/mp-out/text) $(if $(SHOTS),--shots $(SHOTS)) $(if $(REVIEW),--review $(REVIEW))
 track: setup
 	@test -n "$(VIDEO)" || { echo "usage : make track VIDEO=fichier.mp4 [OUT=dossier]"; exit 2; }
 	$(MP_VENV_BASE)-legacy/bin/python $(SK)/scripts/track_motion.py "$(VIDEO)" --out $(or $(OUT),/tmp/mp-out/track)
@@ -26,4 +33,4 @@ test: setup
 check: setup
 	bash $(SK)/scripts/check.sh
 clean:
-	rm -rf $(MP_VENV_BASE)-legacy $(MP_VENV_BASE)-tasks /tmp/mp-sample
+	rm -rf $(MP_VENV_BASE)-legacy $(MP_VENV_BASE)-tasks $(MP_VENV_BASE)-ocr /tmp/mp-sample

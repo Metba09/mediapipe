@@ -20,3 +20,9 @@ if grep -rEn --exclude=check.sh "ghp_|github_pat_|AKIA[0-9A-Z]{16}|BEGIN (RSA |E
 echo "== test de fumée (voie legacy)"
 [ -f "$BASE-legacy/.ready" ] || { echo "environnement absent : lancer 'make setup' d'abord" >&2; exit 1; }
 "$BASE-legacy/bin/python" tests/test_smoke.py 2>&1 | grep -v "^W0000\|^I0000\|INFO\|WARNING"
+echo "== test du suivi de texte (voie OCR, facultatif)"
+if [ -f "${MP_VENV_BASE:-/tmp/mp}-ocr/.ready" ]; then
+  "${MP_VENV_BASE:-/tmp/mp}-ocr/bin/python" tests/test_text.py 2>&1 | grep -v "^W0000\|^I0000\|INFO\|WARNING"
+else
+  echo "ignoré : environnement OCR absent (make setup-ocr)"
+fi

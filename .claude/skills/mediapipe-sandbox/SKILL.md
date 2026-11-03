@@ -32,6 +32,13 @@ Depuis la racine du fork, `make setup` fait la même chose ; `make test` lance l
 
 ## Utilisation
 
+Suivi des TEXTES animés (motion typographique) : expressions, trajectoires, styles en JSON (OCR hors-ligne : rapidocr + tesseract) :
+```bash
+make setup-ocr                                   # crée /tmp/mp-ocr (≈ 1 min)
+make text VIDEO=video.mp4 [SHOTS=/tmp/mp-out/track/tracks.json] [REVIEW=revue.json]
+```
+Sortie `text_tracking.json` (schéma `text-motion-tracking/1`) : `expressions` (lignes regroupées, ordre de lecture, alignement), `elements` (texte, variantes OCR, qualité fiable/moyen/fragment, niveau principal/secondaire/overlay, `trajectory.per_frame` [image, t, cx, cy, w, h, angle, conf, opacité estimée, couleur], `keyframes` simplifiées, `style` mesuré : couleur + candidats, fond, taille de police estimée, graisse, italique, casse, halo, contraste des traits), plus `text_preview.mp4`. Les polices ne sont PAS identifiées : `font_class_guess` est une heuristique faible (elle classe mal certains serifs) ; pour une classe de police fiable, regarder l'image en gros plan et l'ajouter via `--review` (champ `visual_review`, séparé des mesures). Vérifier toujours les textes principaux à l'œil : l'OCR se trompe quand un objet masque une lettre (ex. « VOGUE » lu « VOUE ») et les petits textes restent approximatifs.
+
 Suivi de mouvement d'une vidéo (motion design, plans caméra : aucun modèle, aucun réseau) :
 ```bash
 make track VIDEO=video.mp4            # ou : /tmp/mp-legacy/bin/python scripts/track_motion.py video.mp4 --out /tmp/mp-out/track
